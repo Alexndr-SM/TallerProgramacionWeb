@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Activity, ArrowRight, ArrowUpRight, CalendarDays, Check, Compass, CreditCard, Download, RefreshCw, ShieldCheck, Users } from 'lucide-react'
+import { Activity, ArrowRight, ArrowUpRight, CalendarDays, Check, Compass, CreditCard, Download, FileSpreadsheet, RefreshCw, ShieldCheck, Users } from 'lucide-react'
 import { cmsRequest } from './cmsApi.js'
 import { downloadCSV, limaDate, pen, readableDate, trend } from './dashboardUtils.js'
 
@@ -48,6 +48,7 @@ function Timeline({ daily, mode }) {
 export default function AdminDashboard({ user, summary, reservations, products, onNavigate, period, setPeriod, refreshVersion, loading: shellLoading, error: shellError, onRefresh }) {
   const [analytics, setAnalytics] = useState(null), [loading, setLoading] = useState(true), [error, setError] = useState('')
   const [mode, setMode] = useState('count'), [method, setMethod] = useState(null)
+  const [sheetExport, setSheetExport] = useState(null), [exportingSheet, setExportingSheet] = useState(false)
   useEffect(() => {
     const controller = new AbortController(); let current = true
     setLoading(true); setError(''); setAnalytics(null); setMethod(null)
@@ -72,6 +73,19 @@ export default function AdminDashboard({ user, summary, reservations, products, 
     if (!analytics) return
     downloadCSV(`icaturismo-${analytics.from}-${analytics.to}.csv`, [['Fecha (Perú)', 'Reservas creadas', 'Ingresos de esas reservas con pago confirmado (PEN)'], ...analytics.daily.map((row) => [row.date, row.count, row.paid])])
   }
+  async function exportToGoogleSheets() {
+    if (!analytics || exportingSheet) return
+    setSheetExport(null); setExportingSheet(true)
+    try {
+      setSheetExport(await cmsRequest('/admin/reports/google-sheets', {
+        method: 'POST', body: { from: analytics.from, to: analytics.to },
+      }))
+    } catch (failure) {
+      setSheetExport({ error: failure.message })
+    } finally {
+      setExportingSheet(false)
+    }
+  }
   return <div className="dash-home">
     <section className="dashboard-welcome"><div><p className="eyebrow"><CalendarDays size={15} /> {today.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Lima' })}</p><h1>¡Hola, <span>{firstName}!</span></h1><p>Una nueva mirada a tus viajes, tu equipo y tus resultados.</p><span className="dash-period-label">{analytics ? `${readableDate(analytics.from)} — ${readableDate(analytics.to)}` : `Últimos ${period} días`} · Perú</span></div><div className="dash-welcome-actions"><span className={`dash-connection ${error || shellError ? 'is-error' : ''}`}><i />{busy ? 'Actualizando…' : error || shellError ? 'Revisar conexión' : 'Datos actualizados'}</span><button type="button" className="button button--quiet" onClick={onRefresh} disabled={busy}><RefreshCw size={15} />Actualizar</button></div></section>
     {(error || shellError) && <div className="dash-error" role="alert">{error || shellError}<button type="button" onClick={onRefresh}>Reintentar</button></div>}
@@ -86,7 +100,10 @@ export default function AdminDashboard({ user, summary, reservations, products, 
       <section className="panel dash-line-panel"><div className="panel-heading"><div className="dash-panel-title"><span><CalendarDays size={19} /></span><div><h2>El pulso de tus reservas</h2><p>Actividad diaria · hora de Perú</p></div></div><select className="select select--small" value={period} onChange={(event) => setPeriod(event.target.value)} aria-label="Período del dashboard"><option value="7">Últimos 7 días</option><option value="30">Últimos 30 días</option><option value="90">Últimos 90 días</option></select></div>
         <div className="dash-chart-toolbar"><div className="dash-chart-total"><strong>{loading ? '—' : mode === 'paid' ? pen(paid) : count}</strong><span>{mode === 'paid' ? 'pagos confirmados de reservas creadas en el período' : 'reservas en el período'}</span></div><div className="dash-segmented" role="group" aria-label="Métrica del gráfico"><button type="button" className={mode === 'count' ? 'is-active' : ''} aria-pressed={mode === 'count'} onClick={() => setMode('count')}>Reservas</button><button type="button" className={mode === 'paid' ? 'is-active' : ''} aria-pressed={mode === 'paid'} onClick={() => setMode('paid')}>Ingresos</button></div></div>
         {loading ? <div className="dash-chart-skeleton" role="status">Cargando el gráfico…</div> : analytics ? <Timeline key={`${period}-${mode}`} daily={analytics.daily} mode={mode} /> : <p className="empty-state">No se pudo cargar la actividad.</p>}
-        <div className="dash-chart-footer"><span>Los ingresos corresponden a reservas con pago confirmado; el proyecto utiliza pagos de demostración.</span><button type="button" className="text-link" onClick={exportDaily} disabled={!analytics}><Download size={14} />CSV</button></div>
+        <div className="dash-chart-footer"><span>Los ingresos corresponden a reservas con pago confirmado; el proyecto utiliza pagos de demostración.</span><button type="button" className="text-link" onClick={exportDaily} disabled={!analytics}><Download size={14} />CSV</button>{user?.rol === 'admin' && <button type="button" className="text-link" onClick={exportToGoogleSheets} disabled={!analytics || exportingSheet}><FileSpreadsheet size={14} />{exportingSheet ? 'Exportando…' : 'Google Sheets'}</button>}</div>
+        {sheetExport && (sheetExport.error
+          ? <p className="dash-sheet-result is-error" role="alert">{sheetExport.error}</p>
+          : <p className="dash-sheet-result" role="status">Reporte actualizado: <a href={sheetExport.url} target="_blank" rel="noopener noreferrer">{sheetExport.title}</a></p>)}
       </section>
       <section className="panel dash-channel-panel"><img className="dash-card-palm" src="../assets/admin/palm-cutout.png" alt="" aria-hidden="true" /><span className="dash-tiny-glint" aria-hidden="true" /><div className="panel-heading"><div className="dash-panel-title"><span><CreditCard size={19} /></span><div><h2>Reservas por método</h2><p>Forma de pago elegida · {period} días</p></div></div></div>
         <div className="dash-donut-wrap"><div className={`dash-donut ${chosenMethod ? 'is-selected' : ''}`} style={{ background: `conic-gradient(${gradient})` }} role="img" aria-label={methods.map((item) => `${item.name}: ${item.count} reservas`).join(', ')}><div><strong>{loading ? '—' : chosenMethod ? chosenMethod.count : count}</strong><span>{chosenMethod?.name || 'reservas'}</span></div></div></div>

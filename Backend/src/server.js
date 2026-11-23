@@ -6,6 +6,8 @@
  *   CORS_ORIGIN   → URL de tu frontend (ej. https://tu-sitio.onrender.com)
  *   CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
  *                 → credenciales de Cloudinary (o CLOUDINARY_URL)
+ *   GOOGLE_SHEETS_API → JSON de credenciales de una cuenta de servicio de Google
+ *   GOOGLE_SHEETS_SPREADSHEET_ID → ID de la hoja destino, compartida con esa cuenta
  *   NODE_ENV      → production
  *   PORT          → lo asigna Render solo; no hace falta ponerlo
  */
