@@ -34,7 +34,7 @@ function createSheetsClient() {
 }
 
 function reportRows({ from, to, summary, daily, methods, destinations, reservations }) {
-  return [
+  const rows = [
     ['Reporte administrativo de reservas', from, to],
     ['Zona horaria', 'America/Lima'],
     [],
@@ -48,23 +48,247 @@ function reportRows({ from, to, summary, daily, methods, destinations, reservati
     [],
     ['Actividad diaria'],
     ['Fecha (Perú)', 'Reservas', 'Ingresos pagados (PEN)'],
-    ...daily.map((row) => [row.date, row.count, Number(row.paid)]),
-    [],
-    ['Métodos de pago'],
-    ['Método', 'Reservas'],
-    ...methods.map((row) => [row.method, row.count]),
-    [],
-    ['Destinos'],
-    ['Destino', 'Reservas', 'Ingresos pagados (PEN)'],
-    ...destinations.map((row) => [row.name, row.count, Number(row.paid)]),
-    [],
-    ['Detalle de reservas (sin datos personales)'],
-    ['ID', 'Creada (Perú)', 'Fecha del tour', 'Experiencia', 'Asistentes', 'Método de pago', 'Estado', 'Estado de pago', 'Total (PEN)'],
-    ...reservations.map((row) => [
-      row.id, row.created_at, row.fecha_tour, row.promocion_nombre, row.asistentes,
-      row.metodo_pago, row.estado, row.estado_pago, Number(row.total),
-    ]),
   ];
+  const layout = {
+    summaryHeader: 4,
+    dailyHeader: rows.length,
+    dailyStart: rows.length + 1,
+  };
+  rows.push(...daily.map((row) => [row.date, row.count, Number(row.paid)]));
+  rows.push([], ['Métodos de pago']);
+  layout.methodsTitle = rows.length - 1;
+  layout.methodsHeader = rows.length;
+  rows.push(['Método', 'Reservas']);
+  layout.methodsStart = rows.length;
+  rows.push(...methods.map((row) => [row.method, row.count]));
+  rows.push([], ['Destinos']);
+  layout.destinationsTitle = rows.length - 1;
+  layout.destinationsHeader = rows.length;
+  rows.push(['Destino', 'Reservas', 'Ingresos pagados (PEN)']);
+  layout.destinationsStart = rows.length;
+  rows.push(...destinations.map((row) => [row.name, row.count, Number(row.paid)]));
+  rows.push([]);
+
+  // Keep the reservation table below the four charts, even for short periods.
+  while (rows.length < 57) rows.push([]);
+  layout.reservationsTitle = rows.length;
+  rows.push(['Detalle de reservas (sin datos personales)']);
+  layout.reservationsHeader = rows.length;
+  rows.push(['ID', 'Creada (Perú)', 'Fecha del tour', 'Experiencia', 'Asistentes', 'Método de pago', 'Estado', 'Estado de pago', 'Total (PEN)']);
+  layout.reservationsStart = rows.length;
+  rows.push(...reservations.map((row) => [
+    row.id, row.created_at, row.fecha_tour, row.promocion_nombre, row.asistentes,
+    row.metodo_pago, row.estado, row.estado_pago, Number(row.total),
+  ]));
+  return { rows, layout };
+}
+
+function gridRange(sheetId, startRowIndex, endRowIndex, startColumnIndex, endColumnIndex) {
+  return { sheetId, startRowIndex, endRowIndex, startColumnIndex, endColumnIndex };
+}
+
+function reportFormattingRequests(sheetId, layout, counts) {
+  const tableStyles = [
+    { header: layout.dailyHeader, start: layout.dailyStart, count: counts.daily, columns: 3 },
+    { header: layout.methodsHeader, start: layout.methodsStart, count: counts.methods, columns: 2 },
+    { header: layout.destinationsHeader, start: layout.destinationsStart, count: counts.destinations, columns: 3 },
+    { header: layout.reservationsHeader, start: layout.reservationsStart, count: counts.reservations, columns: 9 },
+  ];
+  const requests = [
+    { repeatCell: {
+      range: gridRange(sheetId, 0, layout.reservationsStart + counts.reservations, 0, 9),
+      cell: { userEnteredFormat: { textFormat: { fontFamily: 'Arial', fontSize: 10 }, verticalAlignment: 'MIDDLE' } },
+      fields: 'userEnteredFormat(textFormat,verticalAlignment)',
+    } },
+    { repeatCell: {
+      range: gridRange(sheetId, 0, 1, 0, 3),
+      cell: { userEnteredFormat: { backgroundColor: { red: 0.04, green: 0.29, blue: 0.35 }, textFormat: { foregroundColor: { red: 1, green: 1, blue: 1 }, bold: true, fontSize: 12 }, verticalAlignment: 'MIDDLE' } },
+      fields: 'userEnteredFormat(backgroundColor,textFormat,verticalAlignment)',
+    } },
+    { repeatCell: {
+      range: gridRange(sheetId, 1, 2, 0, 2),
+      cell: { userEnteredFormat: { textFormat: { foregroundColor: { red: 0.24, green: 0.32, blue: 0.36 }, fontSize: 9 } } },
+      fields: 'userEnteredFormat.textFormat',
+    } },
+    { repeatCell: {
+      range: gridRange(sheetId, 3, 4, 0, 3),
+      cell: { userEnteredFormat: { textFormat: { foregroundColor: { red: 0.04, green: 0.29, blue: 0.35 }, bold: true, fontSize: 11 } } },
+      fields: 'userEnteredFormat.textFormat',
+    } },
+    ...[layout.dailyHeader - 1, layout.methodsTitle, layout.destinationsTitle, layout.reservationsTitle].map((rowIndex) => ({
+      repeatCell: {
+        range: gridRange(sheetId, rowIndex, rowIndex + 1, 0, rowIndex === layout.reservationsTitle ? 9 : 3),
+        cell: { userEnteredFormat: { textFormat: { foregroundColor: { red: 0.04, green: 0.29, blue: 0.35 }, bold: true, fontSize: 11 } } },
+        fields: 'userEnteredFormat.textFormat',
+      },
+    })),
+    { repeatCell: {
+      range: gridRange(sheetId, 4, 5, 0, 2),
+      cell: { userEnteredFormat: { backgroundColor: { red: 0.04, green: 0.29, blue: 0.35 }, textFormat: { foregroundColor: { red: 1, green: 1, blue: 1 }, bold: true } } },
+      fields: 'userEnteredFormat(backgroundColor,textFormat)',
+    } },
+    { repeatCell: {
+      range: gridRange(sheetId, 9, 10, 1, 2),
+      cell: { userEnteredFormat: { numberFormat: { type: 'CURRENCY', pattern: '"S/" #,##0.00' }, textFormat: { bold: true } } },
+      fields: 'userEnteredFormat(numberFormat,textFormat)',
+    } },
+    { repeatCell: {
+      range: gridRange(sheetId, 0, layout.reservationsStart + counts.reservations, 3, 4),
+      cell: { userEnteredFormat: { backgroundColor: { red: 1, green: 1, blue: 1 } } },
+      fields: 'userEnteredFormat.backgroundColor',
+    } },
+    { updateDimensionProperties: {
+      range: { sheetId, dimension: 'COLUMNS', startIndex: 0, endIndex: 1 },
+      properties: { pixelSize: 145 }, fields: 'pixelSize',
+    } },
+    { updateDimensionProperties: {
+      range: { sheetId, dimension: 'COLUMNS', startIndex: 1, endIndex: 3 },
+      properties: { pixelSize: 145 }, fields: 'pixelSize',
+    } },
+    { updateDimensionProperties: {
+      range: { sheetId, dimension: 'COLUMNS', startIndex: 3, endIndex: 4 },
+      properties: { pixelSize: 30 }, fields: 'pixelSize',
+    } },
+    { updateDimensionProperties: {
+      range: { sheetId, dimension: 'COLUMNS', startIndex: 4, endIndex: 9 },
+      properties: { pixelSize: 120 }, fields: 'pixelSize',
+    } },
+    { mergeCells: { range: gridRange(sheetId, 3, 4, 0, 3), mergeType: 'MERGE_ALL' } },
+    { mergeCells: { range: gridRange(sheetId, layout.methodsTitle, layout.methodsTitle + 1, 0, 2), mergeType: 'MERGE_ALL' } },
+    { mergeCells: { range: gridRange(sheetId, layout.destinationsTitle, layout.destinationsTitle + 1, 0, 3), mergeType: 'MERGE_ALL' } },
+    { mergeCells: { range: gridRange(sheetId, layout.reservationsTitle, layout.reservationsTitle + 1, 0, 9), mergeType: 'MERGE_ALL' } },
+  ];
+
+  for (const { header, start, count, columns } of tableStyles) {
+    requests.push({
+      repeatCell: {
+        range: gridRange(sheetId, header, header + 1, 0, columns),
+        cell: { userEnteredFormat: { backgroundColor: { red: 0.04, green: 0.29, blue: 0.35 }, textFormat: { foregroundColor: { red: 1, green: 1, blue: 1 }, bold: true } } },
+        fields: 'userEnteredFormat(backgroundColor,textFormat)',
+      },
+    });
+    if (count) requests.push({
+      addBanding: {
+        bandedRange: {
+          range: gridRange(sheetId, header, start + count, 0, columns),
+          rowProperties: {
+            headerColor: { red: 0.04, green: 0.29, blue: 0.35 },
+            firstBandColor: { red: 1, green: 1, blue: 1 },
+            secondBandColor: { red: 0.90, green: 0.94, blue: 0.95 },
+          },
+        },
+      },
+    });
+  }
+
+  const currencyFormat = { type: 'CURRENCY', pattern: '"S/" #,##0.00' };
+  for (const range of [
+    gridRange(sheetId, layout.dailyStart, layout.dailyStart + counts.daily, 2, 3),
+    gridRange(sheetId, layout.destinationsStart, layout.destinationsStart + counts.destinations, 2, 3),
+    gridRange(sheetId, layout.reservationsStart, layout.reservationsStart + counts.reservations, 8, 9),
+  ]) {
+    if (range.startRowIndex < range.endRowIndex) requests.push({
+      repeatCell: {
+        range,
+        cell: { userEnteredFormat: { numberFormat: currencyFormat } },
+        fields: 'userEnteredFormat.numberFormat',
+      },
+    });
+  }
+
+  const statusRange = gridRange(sheetId, layout.reservationsStart, layout.reservationsStart + counts.reservations, 6, 8);
+  if (counts.reservations) {
+    for (const [column, value, color] of [
+      [6, 'confirmada', { red: 0.82, green: 0.92, blue: 0.83 }],
+      [6, 'pendiente', { red: 1, green: 0.95, blue: 0.78 }],
+      [6, 'cancelada', { red: 0.98, green: 0.84, blue: 0.82 }],
+      [7, 'pagado', { red: 0.82, green: 0.92, blue: 0.83 }],
+      [7, 'pendiente', { red: 1, green: 0.95, blue: 0.78 }],
+      [7, 'reembolsado', { red: 0.84, green: 0.88, blue: 0.96 }],
+    ]) {
+      requests.push({
+        addConditionalFormatRule: {
+          index: 0,
+          rule: {
+            ranges: [gridRange(sheetId, statusRange.startRowIndex, statusRange.endRowIndex, column, column + 1)],
+            booleanRule: {
+              condition: { type: 'TEXT_EQ', values: [{ userEnteredValue: value }] },
+              format: { backgroundColor: color },
+            },
+          },
+        },
+      });
+    }
+  }
+
+  return requests;
+}
+
+function reportCharts(sheetId, layout, counts) {
+  const dataRange = (startRow, endRow, startColumn, endColumn) => ({
+    sourceRange: { sources: [gridRange(sheetId, startRow, endRow, startColumn, endColumn)] },
+  });
+  const chartPosition = (rowIndex) => ({
+    overlayPosition: {
+      anchorCell: { sheetId, rowIndex, columnIndex: 4 },
+      widthPixels: 600,
+      heightPixels: 235,
+    },
+  });
+  const charts = [
+    {
+      title: 'Reservas por día',
+      position: chartPosition(1),
+      spec: {
+        backgroundColor: { red: 1, green: 1, blue: 1 },
+        basicChart: {
+          chartType: 'COLUMN', legendPosition: 'NO_LEGEND', headerCount: 1,
+          axis: [{ position: 'BOTTOM_AXIS', title: 'Fecha' }, { position: 'LEFT_AXIS', title: 'Reservas' }],
+          domains: [{ domain: dataRange(layout.dailyHeader, layout.dailyStart + counts.daily, 0, 1) }],
+          series: [{ series: dataRange(layout.dailyHeader, layout.dailyStart + counts.daily, 1, 2), targetAxis: 'LEFT_AXIS', color: { red: 0.04, green: 0.29, blue: 0.35 } }],
+        },
+      },
+    },
+    {
+      title: 'Ingresos pagados por día (PEN)',
+      position: chartPosition(15),
+      spec: {
+        backgroundColor: { red: 1, green: 1, blue: 1 },
+        basicChart: {
+          chartType: 'COLUMN', legendPosition: 'NO_LEGEND', headerCount: 1,
+          axis: [{ position: 'BOTTOM_AXIS', title: 'Fecha' }, { position: 'LEFT_AXIS', title: 'S/' }],
+          domains: [{ domain: dataRange(layout.dailyHeader, layout.dailyStart + counts.daily, 0, 1) }],
+          series: [{ series: dataRange(layout.dailyHeader, layout.dailyStart + counts.daily, 2, 3), targetAxis: 'LEFT_AXIS', color: { red: 0.92, green: 0.43, blue: 0.12 } }],
+        },
+      },
+    },
+    ...(counts.methods ? [{
+      title: 'Reservas por método de pago',
+      position: chartPosition(29),
+      spec: {
+        backgroundColor: { red: 1, green: 1, blue: 1 },
+        pieChart: {
+          legendPosition: 'RIGHT_LEGEND', pieHole: 0.58,
+          domain: dataRange(layout.methodsHeader, layout.methodsStart + counts.methods, 0, 1),
+          series: dataRange(layout.methodsHeader, layout.methodsStart + counts.methods, 1, 2),
+        },
+      },
+    }] : []),
+    ...(counts.destinations ? [{
+      title: 'Ingresos pagados por destino (PEN)',
+      position: chartPosition(43),
+      spec: {
+        backgroundColor: { red: 1, green: 1, blue: 1 },
+        basicChart: {
+          chartType: 'BAR', legendPosition: 'NO_LEGEND', headerCount: 1,
+          axis: [{ position: 'BOTTOM_AXIS', title: 'S/' }, { position: 'LEFT_AXIS', title: 'Destino' }],
+          domains: [{ domain: dataRange(layout.destinationsHeader, layout.destinationsStart + counts.destinations, 0, 1) }],
+          series: [{ series: dataRange(layout.destinationsHeader, layout.destinationsStart + counts.destinations, 2, 3), color: { red: 0.15, green: 0.61, blue: 0.54 } }],
+        },
+      },
+    }] : []),
+  ];
+  return charts.map((chart) => ({ addChart: { chart } }));
 }
 
 const exportGoogleSheetsReport = endpoint(async (req, res) => {
@@ -126,7 +350,7 @@ const exportGoogleSheetsReport = endpoint(async (req, res) => {
   try {
     const workbook = await sheets.spreadsheets.get({
       spreadsheetId,
-      fields: 'sheets.properties(sheetId,title)',
+      fields: 'sheets(properties(sheetId,title),charts(chartId),bandedRanges(bandedRangeId),conditionalFormats,merges)',
     });
     const existing = workbook.data.sheets?.find((sheet) => sheet.properties.title === sheetTitle);
     if (existing) {
@@ -149,9 +373,21 @@ const exportGoogleSheetsReport = endpoint(async (req, res) => {
       }
     }
 
-    await sheets.spreadsheets.batchUpdate({
-      spreadsheetId,
-      requestBody: { requests: [{ updateCells: { range: { sheetId }, fields: 'userEnteredValue' } }] },
+    const selectedSheet = workbook.data.sheets?.find((sheet) => sheet.properties.sheetId === sheetId);
+    const clearRequests = [
+      ...((selectedSheet?.charts || []).map((chart) => ({ deleteEmbeddedObject: { objectId: chart.chartId } }))),
+      ...((selectedSheet?.bandedRanges || []).map((banding) => ({ deleteBanding: { bandedRangeId: banding.bandedRangeId } }))),
+      ...((selectedSheet?.conditionalFormats || []).map((_, index, rules) => ({
+        deleteConditionalFormatRule: { sheetId, index: rules.length - index - 1 },
+      }))),
+      ...((selectedSheet?.merges || []).map((range) => ({ unmergeCells: { range } }))),
+      { updateCells: { range: { sheetId }, fields: 'userEnteredValue,userEnteredFormat' } },
+    ];
+    await sheets.spreadsheets.batchUpdate({ spreadsheetId, requestBody: { requests: clearRequests } });
+    const { rows, layout } = reportRows({
+      from, to, summary: summaryResult.rows[0], daily: dailyResult.rows,
+      methods: methodsResult.rows, destinations: destinationsResult.rows,
+      reservations: reservationResult.rows,
     });
     await sheets.spreadsheets.values.update({
       spreadsheetId,
@@ -159,12 +395,20 @@ const exportGoogleSheetsReport = endpoint(async (req, res) => {
       valueInputOption: 'RAW',
       requestBody: {
         majorDimension: 'ROWS',
-        values: reportRows({
-          from, to, summary: summaryResult.rows[0], daily: dailyResult.rows,
-          methods: methodsResult.rows, destinations: destinationsResult.rows,
-          reservations: reservationResult.rows,
-        }),
+        values: rows,
       },
+    });
+    const counts = {
+      daily: dailyResult.rows.length, methods: methodsResult.rows.length,
+      destinations: destinationsResult.rows.length, reservations: reservationResult.rows.length,
+    };
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      requestBody: { requests: reportFormattingRequests(sheetId, layout, counts) },
+    });
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      requestBody: { requests: reportCharts(sheetId, layout, counts) },
     });
   } catch (error) {
     console.error('exportGoogleSheetsReport:', error.message);

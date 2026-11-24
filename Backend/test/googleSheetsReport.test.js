@@ -16,6 +16,7 @@ test('el reporte de Google Sheets requiere admin y reemplaza un reporte sin dato
   process.env.GOOGLE_SHEETS_SPREADSHEET_ID = 'spreadsheet_test_id';
 
   const writes = [];
+  const batchUpdates = [];
   const queries = [];
   const googleapisPath = require.resolve('googleapis');
   const databasePath = require.resolve('../src/config/database');
@@ -30,8 +31,12 @@ test('el reporte de Google Sheets requiere admin y reemplaza un reporte sin dato
         auth: { GoogleAuth: class GoogleAuth { constructor(options) { this.options = options; } } },
         sheets: () => ({
           spreadsheets: {
-            get: async () => ({ data: { sheets: [{ properties: { title: 'Reporte_20260301_20260307', sheetId: 42 } }] } }),
-            batchUpdate: async (request) => { writes.push(request); return { data: { replies: [] } }; },
+            get: async () => ({ data: { sheets: [{
+              properties: { title: 'Reporte_20260301_20260307', sheetId: 42 },
+              charts: [{ chartId: 9 }], bandedRanges: [{ bandedRangeId: 4 }], conditionalFormats: [{}, {}],
+              merges: [{ sheetId: 42, startRowIndex: 3, endRowIndex: 4, startColumnIndex: 0, endColumnIndex: 3 }],
+            }] } }),
+            batchUpdate: async (request) => { batchUpdates.push(request.requestBody.requests); return { data: { replies: [] } }; },
             values: { update: async (request) => { writes.push(request); return { data: {} }; } },
           },
         }),
@@ -128,5 +133,19 @@ test('el reporte de Google Sheets requiere admin y reemplaza un reporte sin dato
     const content = JSON.stringify(update.requestBody.values);
     assert.match(content, /Tour de prueba/);
     assert.doesNotMatch(content, /Dato privado|privado@example\.test/);
+    assert.equal(update.requestBody.values[57][0], 'Detalle de reservas (sin datos personales)');
+    const cleanup = batchUpdates[0];
+    assert.ok(cleanup.some((request) => request.deleteEmbeddedObject?.objectId === 9));
+    assert.ok(cleanup.some((request) => request.deleteBanding?.bandedRangeId === 4));
+    assert.ok(cleanup.some((request) => request.unmergeCells));
+    assert.equal(cleanup.filter((request) => request.deleteConditionalFormatRule).length, 2);
+    const formatting = batchUpdates[1];
+    assert.equal(formatting.filter((request) => request.addBanding).length, 4);
+    assert.ok(formatting.some((request) => request.mergeCells?.range.startRowIndex === 3));
+    assert.ok(formatting.some((request) => request.updateDimensionProperties?.properties.pixelSize === 30));
+    const charts = batchUpdates[2].filter((request) => request.addChart).map((request) => request.addChart.chart);
+    assert.equal(charts.length, 4);
+    assert.deepEqual(charts.map((chart) => chart.position.overlayPosition.anchorCell.rowIndex), [1, 15, 29, 43]);
+    assert.equal(charts[3].spec.basicChart.series[0].targetAxis, undefined);
   });
 });
