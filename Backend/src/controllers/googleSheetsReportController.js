@@ -55,8 +55,8 @@ function reportRows({ from, to, summary, daily, methods, destinations, reservati
   ];
   const layout = {
     summaryHeader: 4,
-    dailyHeader: rows.length,
-    dailyStart: rows.length + 1,
+    dailyHeader: rows.length - 1,
+    dailyStart: rows.length,
   };
   rows.push(...daily.map((row) => [row.date, row.count, Number(row.paid)]));
   rows.push([], ['Métodos de pago']);
@@ -146,12 +146,16 @@ function reportFormattingRequests(sheetId, layout, counts) {
       properties: { pixelSize: 145 }, fields: 'pixelSize',
     } },
     { updateDimensionProperties: {
-      range: { sheetId, dimension: 'COLUMNS', startIndex: 1, endIndex: 3 },
+      range: { sheetId, dimension: 'COLUMNS', startIndex: 1, endIndex: 2 },
       properties: { pixelSize: 145 }, fields: 'pixelSize',
     } },
     { updateDimensionProperties: {
+      range: { sheetId, dimension: 'COLUMNS', startIndex: 2, endIndex: 3 },
+      properties: { pixelSize: 117 }, fields: 'pixelSize',
+    } },
+    { updateDimensionProperties: {
       range: { sheetId, dimension: 'COLUMNS', startIndex: 3, endIndex: 4 },
-      properties: { pixelSize: 30 }, fields: 'pixelSize',
+      properties: { pixelSize: 225 }, fields: 'pixelSize',
     } },
     { updateDimensionProperties: {
       range: { sheetId, dimension: 'COLUMNS', startIndex: 4, endIndex: 9 },

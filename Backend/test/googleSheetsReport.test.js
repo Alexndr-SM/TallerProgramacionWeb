@@ -134,6 +134,8 @@ test('el reporte de Google Sheets requiere admin y reemplaza un reporte sin dato
     assert.match(content, /Tour de prueba/);
     assert.doesNotMatch(content, /Dato privado|privado@example\.test/);
     assert.equal(update.requestBody.values[57][0], 'Detalle de reservas (sin datos personales)');
+    assert.deepEqual(update.requestBody.values[12], ['Fecha (Perú)', 'Reservas', 'Ingresos pagados (PEN)']);
+    assert.deepEqual(update.requestBody.values[13], ['2026-03-01', 1, 150]);
     const cleanup = batchUpdates[0];
     assert.ok(cleanup.some((request) => request.deleteEmbeddedObject?.objectId === 9));
     assert.ok(cleanup.some((request) => request.deleteBanding?.bandedRangeId === 4));
@@ -142,7 +144,15 @@ test('el reporte de Google Sheets requiere admin y reemplaza un reporte sin dato
     const formatting = batchUpdates[1];
     assert.equal(formatting.filter((request) => request.addBanding).length, 4);
     assert.ok(formatting.some((request) => request.mergeCells?.range.startRowIndex === 3));
-    assert.ok(formatting.some((request) => request.updateDimensionProperties?.properties.pixelSize === 30));
+    assert.ok(formatting.some((request) => request.repeatCell?.range.startRowIndex === 12
+      && request.repeatCell.range.endRowIndex === 13
+      && request.repeatCell.cell.userEnteredFormat.backgroundColor));
+    assert.ok(formatting.some((request) => request.updateDimensionProperties?.range.startIndex === 2
+      && request.updateDimensionProperties.range.endIndex === 3
+      && request.updateDimensionProperties.properties.pixelSize === 117));
+    assert.ok(formatting.some((request) => request.updateDimensionProperties?.range.startIndex === 3
+      && request.updateDimensionProperties.range.endIndex === 4
+      && request.updateDimensionProperties.properties.pixelSize === 225));
     const charts = batchUpdates[2].filter((request) => request.addChart).map((request) => request.addChart.chart);
     assert.equal(charts.length, 4);
     assert.deepEqual(charts.map((chart) => chart.position.overlayPosition.anchorCell.rowIndex), [1, 15, 29, 43]);
