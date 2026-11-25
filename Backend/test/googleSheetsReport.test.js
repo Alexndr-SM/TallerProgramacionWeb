@@ -28,7 +28,7 @@ test('el reporte de Google Sheets requiere admin y reemplaza un reporte sin dato
     loaded: true,
     exports: {
       google: {
-        auth: { GoogleAuth: class GoogleAuth { constructor(options) { this.options = options; } } },
+        auth: { JWT: class JWT { constructor(options) { this.options = options; } } },
         sheets: () => ({
           spreadsheets: {
             get: async () => ({ data: { sheets: [{
@@ -147,5 +147,12 @@ test('el reporte de Google Sheets requiere admin y reemplaza un reporte sin dato
     assert.equal(charts.length, 4);
     assert.deepEqual(charts.map((chart) => chart.position.overlayPosition.anchorCell.rowIndex), [1, 15, 29, 43]);
     assert.equal(charts[3].spec.basicChart.series[0].targetAxis, undefined);
+    assert.deepEqual(charts.map((chart) => chart.spec.title), [
+      'Reservas por día',
+      'Ingresos pagados por día (PEN)',
+      'Reservas por método de pago',
+      'Ingresos pagados por destino (PEN)',
+    ]);
+    assert.ok(charts.every((chart) => chart.title === undefined));
   });
 });

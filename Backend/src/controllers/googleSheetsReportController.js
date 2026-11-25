@@ -29,7 +29,11 @@ function createSheetsClient() {
     throw new CmsError('GOOGLE_SHEETS_API no contiene credenciales válidas de una cuenta de servicio.', 503);
   }
 
-  const auth = new google.auth.GoogleAuth({ credentials, scopes: [SHEETS_SCOPE] });
+  const auth = new google.auth.JWT({
+    email: credentials.client_email,
+    key: credentials.private_key,
+    scopes: [SHEETS_SCOPE],
+  });
   return { sheets: google.sheets({ version: 'v4', auth }), spreadsheetId };
 }
 
@@ -237,9 +241,9 @@ function reportCharts(sheetId, layout, counts) {
   });
   const charts = [
     {
-      title: 'Reservas por día',
       position: chartPosition(1),
       spec: {
+        title: 'Reservas por día',
         backgroundColor: { red: 1, green: 1, blue: 1 },
         basicChart: {
           chartType: 'COLUMN', legendPosition: 'NO_LEGEND', headerCount: 1,
@@ -250,9 +254,9 @@ function reportCharts(sheetId, layout, counts) {
       },
     },
     {
-      title: 'Ingresos pagados por día (PEN)',
       position: chartPosition(15),
       spec: {
+        title: 'Ingresos pagados por día (PEN)',
         backgroundColor: { red: 1, green: 1, blue: 1 },
         basicChart: {
           chartType: 'COLUMN', legendPosition: 'NO_LEGEND', headerCount: 1,
@@ -263,9 +267,9 @@ function reportCharts(sheetId, layout, counts) {
       },
     },
     ...(counts.methods ? [{
-      title: 'Reservas por método de pago',
       position: chartPosition(29),
       spec: {
+        title: 'Reservas por método de pago',
         backgroundColor: { red: 1, green: 1, blue: 1 },
         pieChart: {
           legendPosition: 'RIGHT_LEGEND', pieHole: 0.58,
@@ -275,9 +279,9 @@ function reportCharts(sheetId, layout, counts) {
       },
     }] : []),
     ...(counts.destinations ? [{
-      title: 'Ingresos pagados por destino (PEN)',
       position: chartPosition(43),
       spec: {
+        title: 'Ingresos pagados por destino (PEN)',
         backgroundColor: { red: 1, green: 1, blue: 1 },
         basicChart: {
           chartType: 'BAR', legendPosition: 'NO_LEGEND', headerCount: 1,
