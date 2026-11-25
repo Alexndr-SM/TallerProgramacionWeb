@@ -6,6 +6,8 @@
  *   CORS_ORIGIN   → URL de tu frontend (ej. https://tu-sitio.onrender.com)
  *   CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
  *                 → credenciales de Cloudinary (o CLOUDINARY_URL)
+ *   GOOGLE_SHEETS_API → JSON de credenciales de una cuenta de servicio de Google
+ *   GOOGLE_SHEETS_SPREADSHEET_ID → ID de la hoja destino, compartida con esa cuenta
  *   NODE_ENV      → production
  *   PORT          → lo asigna Render solo; no hace falta ponerlo
  */
@@ -19,6 +21,7 @@ const reservationRoutes = require('./routes/reservation.routes');
 const adminRoutes = require('./routes/admin.routes');
 const promotionRoutes = require('./routes/promotion.routes');
 const perfilRoutes = require('./routes/perfil.routes');
+const rewardRoutes = require('./routes/reward.routes');
 const destinationRoutes = require('./routes/destination.routes');
 const uploadRoutes = require('./routes/upload.routes');
 const { migrate } = require('./database/migrate');
@@ -64,6 +67,7 @@ app.use('/api/destinos', destinationRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/perfil', perfilRoutes);
+app.use('/api/canjeos', rewardRoutes);
 app.use('/api/equipo', require('./routes/team.routes'));
 
 // Crear tabla usuarios al arrancar (si no existe)

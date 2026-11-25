@@ -7,11 +7,12 @@
     <!-- Estilos solo de registro -->
     <link rel="stylesheet" href="../css/registro.css">
     <link rel="stylesheet" href="../css/theme.css">
-    <link rel="icon" href="../assets/UTP.webp" type="image/webp">
+    <link rel="icon" href="../assets/logoIcaTurismo.svg" type="image/webp">
     <script src="../js/theme.js"></script>
     <link rel="stylesheet" href="../css/page-loader.css">
     <script src="../js/page-loader.js"></script>
     <script src="../js/i18n-dict.js"></script>
+    <script src="../js/i18n-public-dict.js"></script>
     <script src="../js/i18n.js"></script>
 </head>
 <body class="auth-page">
@@ -74,13 +75,62 @@
             <!-- Términos -->
             <div class="form-options">
                 <label>
-                    <input type="checkbox" name="terms">
+                    <input type="checkbox" id="termsCheckbox" name="terms">
                     Acepto los términos y condiciones
                 </label>
             </div>
 
             <button type="submit" class="btn-auth">Crear cuenta</button>
         </form>
+
+        <dialog class="terms-dialog" id="termsDialog" aria-labelledby="termsTitle">
+            <h2 id="termsTitle">Términos y condiciones</h2>
+            <div class="terms-dialog__content" id="termsContent" tabindex="0">
+                <p>Última actualización: 22/11/2026</p>
+                <p>Bienvenido a IcaTurismo (en adelante, "la Plataforma"), identificada con RUC N.º 20601234567 y domicilio legal en Calle Los Turistas 123, Ica - Perú (en adelante, "la Empresa").</p>
+                <p>Al registrarse, acceder o utilizar nuestros servicios a través del sitio web https://tallerprogracionwebproyecto.onrender.com/index.html, usted (en adelante, "el Usuario") acepta quedar vinculado por los presentes Términos y Condiciones. Si no está de acuerdo con alguna de estas disposiciones, deberá abstenerse de utilizar la Plataforma.</p>
+                <h3>1. Objeto de la Plataforma</h3>
+                <p>La Plataforma tiene como finalidad brindar información turística, facilitar la planificación de viajes y conectar a los Usuarios con servicios turísticos, experiencias, alojamientos, tours y actividades dentro del territorio peruano y/o internacional.</p>
+                <h3>2. Registro y Cuenta de Usuario</h3>
+                <p>Para acceder a determinadas funcionalidades de la Plataforma (como reservas, personalización de perfil o publicación de reseñas), el Usuario deberá crear una cuenta proporcionando los siguientes datos obligatorios:</p>
+                <p>Correo electrónico: Debe ser válido, activo y de titularidad del Usuario para recibir notificaciones, confirmaciones y comunicaciones vinculadas al servicio.</p>
+                <p>Documento Nacional de Identidad (DNI): Requerido para verificar la identidad del Usuario, garantizar la seguridad de las transacciones, cumplir con las normativas turísticas y tributarias vigentes, y emitir comprobantes de pago o boletos nominativos cuando corresponda.</p>
+                <p>Foto de perfil: Opcional u obligatoria según la configuración de la cuenta, destinada a la identificación visual del Usuario dentro de la comunidad de la Plataforma.</p>
+                <p>Veracidad de la información: El Usuario declara bajo juramento que todos los datos proporcionados son exactos, auténticos y actuales. La Empresa se reserva el derecho de suspender o cancelar cuentas que contengan datos falsos, suplantación de identidad o documentos adulterados.</p>
+                <h3>3. Seguridad de la Cuenta</h3>
+                <p>El Usuario es el único responsable de mantener la confidencialidad de su contraseña y de todas las actividades que ocurran bajo su cuenta. Deberá notificar de inmediato a la Empresa al correo ante cualquier uso no autorizado o brecha de seguridad.</p>
+                <h3>4. Normas sobre el Contenido Subido por el Usuario (Foto de Perfil y Otros)</h3>
+                <p>Al subir una fotografía de perfil o cualquier otro contenido (comentarios, reseñas, fotos de viajes), el Usuario garantiza que:</p>
+                <p>Es titular de los derechos de imagen y propiedad intelectual de la fotografía, o cuenta con la autorización expresa para utilizarla.</p>
+                <p>La imagen no contiene material ofensivo, difamatorio, pornográfico, violento, discriminatorio, ilegal ni infringe derechos de terceros.</p>
+                <p>Otorga a la Empresa una licencia gratuita, no exclusiva y mundial para alojar, reproducir y mostrar dicha imagen únicamente dentro del funcionamiento y promoción de la Plataforma.</p>
+                <p>La Empresa podrá eliminar sin previo aviso cualquier foto de perfil o contenido que incumpla estas reglas.</p>
+                <h3>5. Protección de Datos Personales</h3>
+                <p>El tratamiento de los datos personales recopilados (correo electrónico, número de DNI, fotografía de perfil y demás datos asociados) se rige por nuestra Política de Privacidad y cumple estrictamente con la Ley N.º 29733, Ley de Protección de Datos Personales del Perú, y su Reglamento (Decreto Supremo N.º 003-2013-JUS).</p>
+                <p>Finalidad: Los datos serán almacenados en el banco de datos de titularidad de la Empresa con la finalidad de gestionar el registro de usuarios, validar su identidad, procesar reservas turísticas, brindar soporte al cliente y, previo consentimiento expreso, enviar promociones comerciales.</p>
+                <p>Derechos ARCO: El Usuario podrá ejercer sus derechos de Acceso, Rectificación, Cancelación y Oposición (ARCO) en cualquier momento enviando una solicitud al correo electrónico.</p>
+                <h3>6. Uso Aceptable de la Plataforma</h3>
+                <p>El Usuario se compromete a utilizar la Plataforma de conformidad con la ley, la moral y el orden público. Queda estrictamente prohibido:</p>
+                <p>Utilizar identidades falsas o registrar el DNI de terceras personas sin su consentimiento.</p>
+                <p>Emplear bots, scrapers o sistemas automatizados para extraer información de la Plataforma.</p>
+                <p>Realizar reservas fraudulentas o interferir con el funcionamiento técnico del sitio web.</p>
+                <h3>7. Servicios Turísticos y Limitación de Responsabilidad</h3>
+                <p>Rol de intermediación (si aplica): Si la Plataforma actúa como intermediaria entre el Usuario y operadores turísticos, hoteles o aerolíneas, la ejecución final del servicio corresponde exclusivamente al proveedor turístico seleccionado.</p>
+                <p>Disponibilidad: La Empresa no garantiza que la Plataforma opere de forma ininterrumpida o libre de errores técnicos, aunque realizará sus mejores esfuerzos para mantener la continuidad del servicio.</p>
+                <p>Fuerza mayor: La Empresa no será responsable por cancelaciones, retrasos o modificaciones en servicios turísticos ocasionados por desastres naturales, huelgas, disposiciones gubernamentales u otros eventos de caso fortuito o fuerza mayor.</p>
+                <h3>8. Propiedad Intelectual</h3>
+                <p>Todos los diseños, logotipos, textos, gráficos, código fuente, bases de datos y contenidos propios de la Plataforma son propiedad exclusiva de la Empresa o de sus licenciantes, y están protegidos por la legislación peruana e internacional sobre derechos de autor y propiedad industrial.</p>
+                <h3>9. Modificaciones de los Términos y Condiciones</h3>
+                <p>La Empresa se reserva el derecho de actualizar o modificar estos Términos y Condiciones en cualquier momento. Los cambios sustanciales serán notificados a través del correo electrónico registrado por el Usuario o mediante un aviso destacado en la Plataforma. El uso continuado del servicio tras la publicación de las modificaciones implicará su aceptación.</p>
+                <h3>10. Legislación Aplicable y Jurisdicción</h3>
+                <p>Los presentes Términos y Condiciones se rigen e interpretan de acuerdo con las leyes de la República del Perú (incluyendo el Código de Protección y Defensa del Consumidor, Ley N.º 29571). Cualquier controversia derivada de su interpretación o ejecución será sometida a la competencia de los jueces y tribunales del distrito judicial de Ica, sin perjuicio del derecho del Usuario de acudir ante el INDECOPI.</p>
+            </div>
+            <p class="terms-dialog__hint" id="termsHint" aria-live="polite">Desplázate hasta el final para poder aceptar.</p>
+            <div class="terms-dialog__actions">
+                <button type="button" class="terms-dialog__cancel" id="termsCancel" autofocus>Cancelar</button>
+                <button type="button" class="terms-dialog__accept" id="termsAccept" disabled>Aceptar términos</button>
+            </div>
+        </dialog>
 
         <!-- Separador y botones sociales (solo visual) -->
         <div class="auth-divider">o regístrate con</div>
@@ -118,14 +168,51 @@
         }
 
         const form = document.querySelector('form');
+        const termsCheckbox = document.getElementById('termsCheckbox');
+        const termsDialog = document.getElementById('termsDialog');
+        const termsContent = document.getElementById('termsContent');
+        const termsAccept = document.getElementById('termsAccept');
+        const termsHint = document.getElementById('termsHint');
+
+        termsCheckbox.addEventListener('click', (event) => {
+            if (termsCheckbox.checked) {
+                event.preventDefault();
+                termsContent.scrollTop = 0;
+                termsAccept.disabled = true;
+                termsHint.textContent = 'Desplázate hasta el final para poder aceptar.';
+                termsDialog.showModal();
+            }
+        });
+
+        termsContent.addEventListener('scroll', () => {
+            const reachedEnd = termsContent.scrollTop + termsContent.clientHeight >= termsContent.scrollHeight - 1;
+            if (reachedEnd) {
+                termsAccept.disabled = false;
+                termsHint.textContent = 'Has llegado al final. Ya puedes aceptar los términos.';
+            }
+        });
+
+        document.getElementById('termsCancel').addEventListener('click', () => {
+            termsDialog.close();
+        });
+
+        termsAccept.addEventListener('click', () => {
+            termsCheckbox.checked = true;
+            termsDialog.close();
+        });
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (!termsCheckbox.checked) {
+                alert('Debes aceptar los términos y condiciones para crear tu cuenta');
+                return;
+            }
             const nombre = document.getElementById('nombre').value.trim();
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const password2 = document.getElementById('password2').value;
             if (password !== password2) {
-                alert('Las contraseñas no coinciden');
+                alert((window.ICAT_I18N?.t || ((value) => value))('Las contraseñas no coinciden'));
                 return;
             }
             const btn = form.querySelector('.btn-auth');
@@ -136,7 +223,7 @@
                 await Auth.register(nombre, email, password);
                 window.location.href = '../index.html';
             } catch (err) {
-                alert(err.message || 'Error al registrarse');
+                alert((window.ICAT_I18N?.t || ((value) => value))(err.message || 'Error al registrarse'));
                 btn.disabled = false;
                 btn.textContent = prev;
             }
